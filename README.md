@@ -22,6 +22,7 @@ A Telegram bot that collects and organizes documents from Telegram groups and ch
    API_HASH=your_telegram_api_hash
    BOT_TOKEN=your_bot_token
    MONGO_URI=your_mongodb_connection_string
+   Phone_number=Your Phone Number
    ```
 4. Get your API credentials from https://my.telegram.org/apps
 5. Create a bot and get the token from @BotFather
