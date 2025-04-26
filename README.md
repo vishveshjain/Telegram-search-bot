@@ -61,3 +61,8 @@ This project is licensed under the [Creative Commons Attribution-NonCommercial 4
 
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
+## Screenshots
+
+| Home | Search Results | Telegram Post Preview |
+|------|---------------|----------------------|
+| ![Home](screenshots/screenshot-1.jpg) | ![Search Results](screenshots/screenshot-2.jpg) | ![Telegram Post Preview](screenshots/screenshot-3.jpg) |
