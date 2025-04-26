@@ -99,3 +99,9 @@ This project is licensed under the Creative Commons Attribution-NonCommercial 4.
 - Font Awesome for icons
 - Google Fonts for typography
 - Responsive design using CSS Grid and Flexbox
+
+## Screenshots
+
+| Home | Search Results | Telegram Post Preview |
+|------|---------------|----------------------|
+| ![Home](screenshot-1.png) | ![Search Results](screenshot-2.png) | ![Telegram Post Preview](screenshot-3.png) |
