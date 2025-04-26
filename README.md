@@ -52,3 +52,11 @@ A Telegram bot that collects and organizes documents from Telegram groups and ch
 - `/connect` - Connect to a new group/channel
 - `/search` - Search for documents
 - `/recent` - Show recent documents 
+
+---
+
+## License
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
+
+License: CC BY-NC 4.0
+
