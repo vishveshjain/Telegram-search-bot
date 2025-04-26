@@ -1263,6 +1263,8 @@ async def fetch_and_index_messages(user_id, source_name, source_id, limit=300):
                 # Generate a file hash for deduplication
                 file_hash = hashlib.md5(f"{entity.id}_{message.id}_{file_name}".encode()).hexdigest()
                 
+                # Will stream on-demand via website; no local storage in indexer
+                
                 # Store original message details for later retrieval
                 original_message = {
                     'chat_id': entity.id,
@@ -1385,6 +1387,8 @@ async def process_new_message(event):
             
         # Generate a file hash for deduplication
         file_hash = hashlib.md5(f"{chat.id}_{message.id}_{file_name}".encode()).hexdigest()
+        
+        # Will stream on-demand via website; no local storage in indexer
         
         # Store original message details for later retrieval
         original_message = {

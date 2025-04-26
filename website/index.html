@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Search Bot</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <i class="fab fa-telegram"></i>
+                        <span>TeleSearch</span>
+                    </a>
+                </div>
+                <div class="nav-links">
+                    <a href="#" class="active">Home</a>
+                    <a href="#features">Features</a>
+                    <a href="#trending">Trending</a>
+                    <a href="#about">About</a>
+                    <a href="#contact">Contact</a>
+                </div>
+                <div class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section with Search -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Find Any Telegram Content Instantly</h1>
+                <p>Search across all your connected Telegram groups and channels with our powerful search bot</p>
+                
+                <div class="search-container">
+                    <form id="search-form">
+                        <input type="text" id="search-input" placeholder="Search for documents, messages, media...">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </div>
+                
+                <div class="hero-buttons">
+                    <a href="https://t.me/ContentSearchingBot" class="btn primary-btn">
+                        <i class="fab fa-telegram"></i> Start Bot
+                    </a>
+                    <a href="#features" class="btn secondary-btn">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Results Section -->
+    <section id="results" class="search-results-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Search Results</h2>
+                <p id="search-count" style="color: var(--text-muted); font-size: 16px;"></p>
+            </div>
+            <div id="search-results" class="search-results"></div>
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Everything you need to organize and search your Telegram content</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Smart Search</h3>
+                    <p>Find any document or message with our intelligent search algorithm</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3>File Organization</h3>
+                    <p>Automatically categorize and organize files from your groups</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Instant Results</h3>
+                    <p>Get lightning-fast search results from all your sources</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure Access</h3>
+                    <p>Your data remains private and secure with end-to-end encryption</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending Topics Section -->
+    <section id="trending" class="trending">
+        <div class="container">
+            <div class="section-header">
+                <h2>Trending Topics</h2>
+                <p>Popular searches and categories from our users</p>
+            </div>
+            
+            <div class="trending-tags" id="trending-tags">
+                <!-- Trending sources will be loaded here dynamically -->
+            </div>
+            <div id="trending-results" class="search-results" style="display:none; margin-top:20px;"></div>
+            <div id="trending-pagination" class="pagination" style="display:none; margin-bottom:20px;"></div>
+            
+            <div class="recent-searches">
+                <h3>Recent Updates</h3>
+                
+                <div class="search-results">
+                    <div class="result-card">
+                        <div class="result-date">25/4/2025</div>
+                        <h4>VERY IMPORTANT VIDEO FOR ALL NEW AGENDA OF ILLUMINATI EXPOSE BY ATUL MISHRA NAGPUR</h4>
+                        <p>A comprehensive analysis of recent global events and their implications...</p>
+                        <div class="result-tags">
+                            <span class="category">Video</span>
+                            <span class="source">Conspiracy theory group</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-date">25/4/2025</div>
+                        <h4>Islam Message App</h4>
+                        <p>A unique app for introducing Islam in 180 international languages...</p>
+                        <div class="result-tags">
+                            <span class="category">App</span>
+                            <span class="source">UltraSec</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-date">25/4/2025</div>
+                        <h4>BREAKING: President Trump is preparing to go after ActBlue</h4>
+                        <p>A new memorandum is reportedly in the works targeting potential foreign donations...</p>
+                        <div class="result-tags">
+                            <span class="category">News</span>
+                            <span class="source">UNVACCINATED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>Get started with our Telegram Search Bot in three simple steps</p>
+            </div>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Start the Bot</h3>
+                    <p>Launch our bot on Telegram and follow the setup instructions</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Connect Sources</h3>
+                    <p>Link your favorite Telegram groups and channels to the bot</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Search & Discover</h3>
+                    <p>Use simple commands to search and find any content you need</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Organize Your Telegram Content?</h2>
+                <p>Start using our Telegram Search Bot today and never lose track of important information again</p>
+                <a href="https://t.me/ContentSearchingBot" class="btn primary-btn">
+                    <i class="fab fa-telegram"></i> Get Started Now
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fab fa-telegram"></i>
+                    <span>TeleSearch</span>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="#">Features</a>
+                        <a href="#">Pricing</a>
+                        <a href="#">FAQ</a>
+                        <a href="#">Support</a>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <a href="#">About Us</a>
+                        <a href="#">Blog</a>
+                        <a href="#">Careers</a>
+                        <a href="#">Contact</a>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Cookie Policy</a>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Connect</h4>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-facebook"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-github"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 TeleSearch. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Document Modal -->
+    <div id="document-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title"></h2>
+        <p id="modal-date"></p>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
