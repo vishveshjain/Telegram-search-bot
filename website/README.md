@@ -21,7 +21,9 @@ website/
 ├── js/
 │   └── main.js
 ├── index.html
-└── README.md
+├── README.md
+├── CONTRIBUTING.md
+└── LICENSE
 ```
 
 ## Setup and Deployment
@@ -83,6 +85,14 @@ To integrate with your Telegram bot:
 - Safari (latest)
 - Edge (latest)
 - Opera (latest)
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to get started.
+
+## License
+
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License. See the [LICENSE](LICENSE) file for details.
 
 ## Credits
 

@@ -28,6 +28,13 @@ A Telegram bot that collects and organizes documents from Telegram groups and ch
 5. Create a bot and get the token from @BotFather
 6. Set up MongoDB (local or Atlas)
 
+## File Structure
+
+- `bot/` - Python bot code
+- `website/` - Front-end website files
+- `CONTRIBUTING.md` - Contribution guidelines
+- `LICENSE` - Project license (CC BY-NC 4.0)
+
 ## Usage
 
 1. Run the bot:
