@@ -104,4 +104,4 @@ This project is licensed under the Creative Commons Attribution-NonCommercial 4.
 
 | Home | Search Results | Telegram Post Preview |
 |------|---------------|----------------------|
-| ![Home](screenshot-1.png) | ![Search Results](screenshot-2.png) | ![Telegram Post Preview](screenshot-3.png) |
+| ![Home](screenshots/screenshot-1.png) | ![Search Results](screenshots/screenshot-2.png) | ![Telegram Post Preview](screenshots/screenshot-3.png) |
