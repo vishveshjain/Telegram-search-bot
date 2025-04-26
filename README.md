@@ -63,6 +63,6 @@ This project is licensed under the [Creative Commons Attribution-NonCommercial 4
 
 ## Screenshots
 
-| Home | Search Results | Telegram Post Preview |
+| Home | /help command | /recent command |
 |------|---------------|----------------------|
 | ![Home](screenshots/screenshot-2.jpg) | ![/help command](screenshots/screenshot-3.jpg) | ![/recent command](screenshots/screenshot-1.jpg) |
