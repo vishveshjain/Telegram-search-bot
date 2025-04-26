@@ -79,6 +79,11 @@ def serve_media(filename):
 def index():
     return send_from_directory('.', 'index.html')
 
+@app.route('/<page>.html')
+def serve_page(page):
+    # Serve standalone HTML pages
+    return send_from_directory('.', f'{page}.html')
+
 @app.route('/api/media/<doc_id>')
 def api_media(doc_id):
     app.logger.debug(f"[api_media] called with doc_id={doc_id}")
@@ -120,9 +125,16 @@ def api_media(doc_id):
     tele_client.download_media(message, file=buf)
     app.logger.debug(f"[api_media] download_media complete, buffer size: {buf.getbuffer().nbytes}")
     buf.seek(0)
-    # Stream to client
+    # Stream to client with proper Content-Length header for progress events
     mimetype = doc.get('mime_type') or 'application/octet-stream'
-    return send_file(buf, mimetype=mimetype, as_attachment=False, download_name=doc.get('file_name'))
+    response = send_file(buf,
+                         mimetype=mimetype,
+                         as_attachment=False,
+                         download_name=doc.get('file_name'),
+                         conditional=True)
+    # Ensure Content-Length is set
+    response.headers['Content-Length'] = str(buf.getbuffer().nbytes)
+    return response
 
 @app.route('/api/search')
 def api_search():
@@ -220,6 +232,31 @@ def api_sources():
     for item in collection.aggregate(pipeline):
         sources.append({"source_name": item["_id"], "count": item["count"]})
     return jsonify(sources)
+
+@app.route('/api/recent')
+def api_recent():
+    # Return most recent documents
+    try:
+        limit = int(request.args.get('limit', 6))
+    except:
+        limit = 6
+    cursor = collection.find({}).sort('date', -1).limit(limit)
+    recent = []
+    for doc in cursor:
+        recent.append({
+            '_id': str(doc.get('_id')),
+            'file_name': doc.get('file_name'),
+            'file_type': doc.get('file_type'),
+            'mime_type': doc.get('mime_type'),
+            'file_hash': doc.get('file_hash'),
+            'text': doc.get('text'),
+            'date': doc.get('date').isoformat() if doc.get('date') else None,
+            'source_name': doc.get('source_name'),
+            'chat_id': doc.get('original_message', {}).get('chat_id'),
+            'message_id': doc.get('original_message', {}).get('message_id'),
+            'media_url': f"/api/media/{doc.get('_id')}"
+        })
+    return jsonify({'results': recent})
 
 @app.route('/download/<doc_id>')
 def download_file(doc_id):

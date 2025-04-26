@@ -140,8 +140,35 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(err => console.error(err));
     }
+    
+    // Load recent updates dynamically
+    function loadRecent(limit = 6) {
+        fetch(`/api/recent?limit=${limit}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('recent-results');
+                container.innerHTML = data.results.map(item => `
+                    <div class="result-card" data-id="${item._id}">
+                        <div class="result-date">${new Date(item.date).toLocaleDateString()}</div>
+                        <h4>${item.file_name}</h4>
+                        <p>${item.text.length > 100 ? item.text.slice(0, 100) + '...' : item.text}</p>
+                        <div class="result-tags">
+                            <span class="category">${item.file_type}</span>
+                            <span class="source">${item.source_name}</span>
+                        </div>
+                    </div>
+                `).join('');
+                container.querySelectorAll('.result-card').forEach(card => {
+                    card.addEventListener('click', () => openDocument(card.dataset.id));
+                });
+            })
+            .catch(console.error);
+    }
+    
     // Initialize trending topics
     loadTrending();
+    // Initialize recent updates
+    loadRecent();
 });
 
 // Utility functions
@@ -284,17 +311,21 @@ function openDocument(docId) {
         .then(res => res.json())
         .then(doc => {
             const modal = document.getElementById('document-modal');
+            // Show loader while media loads
+            const modalBody = document.getElementById('modal-body');
+            modalBody.innerHTML = '<div class="buffer-container"><div class="buffer-bar"></div></div><div class="buffer-text">Loading: 0%</div>';
+            modal.style.display = 'block';
             document.getElementById('modal-title').textContent = doc.file_name;
             document.getElementById('modal-date').textContent = new Date(doc.date).toLocaleString();
             // Render media if available
             let content = '';
             if (doc.media_url) {
                 if (doc.mime_type.startsWith('video/')) {
-                    content += `<video controls src="${doc.media_url}" style="width:100%; max-height:400px; margin-bottom:1em;"></video>`;
+                    content += `<video controls preload="auto" style="width:100%; max-height:400px; margin-bottom:1em;"></video>`;
                 } else if (doc.mime_type.startsWith('image/')) {
-                    content += `<img src="${doc.media_url}" style="width:100%; margin-bottom:1em;" />`;
+                    content += `<img src="${doc.media_url}" style="width:100%; margin-bottom:1em;" onload="this.previousSibling.remove()" />`;
                 } else if (doc.mime_type.startsWith('audio/')) {
-                    content += `<audio controls src="${doc.media_url}" style="width:100%; margin-bottom:1em;"></audio>`;
+                    content += `<audio controls src="${doc.media_url}" style="width:100%; margin-bottom:1em;" onloadedmetadata="this.previousSibling.remove()"></audio>`;
                 }
             } else {
                 content += `<p>No media available.</p>`;
@@ -342,12 +373,42 @@ function openDocument(docId) {
                     content += `<p>${part}</p>`;
                 }
             });
-            document.getElementById('modal-body').innerHTML = content;
+            modalBody.insertAdjacentHTML('beforeend', content);
+            // Setup video buffering progress using media element
+            const bufferContainer = modalBody.querySelector('.buffer-container');
+            const bufferBar = bufferContainer.querySelector('.buffer-bar');
+            const bufferText = modalBody.querySelector('.buffer-text');
+            const videoEl = modalBody.querySelector('video');
+            if (videoEl) {
+                videoEl.addEventListener('progress', () => {
+                    if (videoEl.buffered.length && videoEl.duration) {
+                        const bufferedEnd = videoEl.buffered.end(videoEl.buffered.length - 1);
+                        const percent = Math.floor(bufferedEnd / videoEl.duration * 100);
+                        bufferBar.style.width = percent + '%';
+                        bufferText.textContent = 'Loading: ' + percent + '%';
+                    }
+                });
+                videoEl.addEventListener('canplaythrough', () => {
+                    bufferContainer.remove();
+                    bufferText.remove();
+                });
+                // Trigger loading after listeners attached
+                videoEl.src = doc.media_url;
+                videoEl.load();
+            }
+            // Fallback removal for images and audio
+            const fallbackMedia = modalBody.querySelector('img, audio');
+            if (fallbackMedia) {
+                const eventName = fallbackMedia.tagName === 'IMG' ? 'load' : 'canplaythrough';
+                fallbackMedia.addEventListener(eventName, () => {
+                    bufferContainer.remove();
+                    bufferText.remove();
+                });
+            }
             // Initialize Twitter widgets if available
             if (window.twttr && twttr.widgets && typeof twttr.widgets.load === 'function') {
                 twttr.widgets.load(document.getElementById('modal-body'));
             }
-            modal.style.display = 'block';
         });
 }
 

@@ -33,12 +33,19 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
     font-family: 'Roboto', sans-serif;
     line-height: 1.6;
     color: var(--text-dark);
     background-color: var(--light-bg);
     transition: var(--transition);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
@@ -197,6 +204,7 @@ header {
     background: linear-gradient(135deg, var(--primary-color) 0%, #00a1ff 100%);
     color: var(--text-light);
     text-align: center;
+    flex: 1;
 }
 
 .hero-content {
@@ -512,12 +520,12 @@ footer {
     background-color: var(--dark-bg);
     color: var(--text-light);
     padding: 60px 0 20px;
+    margin-top: auto;
 }
 
 .footer-content {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 40px;
 }
 
@@ -538,8 +546,12 @@ footer {
 
 .footer-links {
     display: flex;
+    position: relative;
+    flex: 1;
     flex-wrap: wrap;
     gap: 40px;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 .footer-column h4 {
@@ -600,6 +612,42 @@ footer {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     color: #adb5bd;
     font-size: 14px;
+}
+
+.footer-links .footer-column:last-child {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin-left: 0;
+}
+
+/* Ensure full-page background */
+html {
+    background-color: var(--light-bg);
+}
+
+/* Buffer progress bar */
+.buffer-container {
+    width: 100%;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+    margin: 10px 0;
+    height: 8px;
+    overflow: hidden;
+}
+
+.buffer-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.2s ease;
+}
+
+.buffer-text {
+    font-size: 12px;
+    text-align: center;
+    color: var(--text-muted);
+    margin-top: 4px;
 }
 
 /* Responsive Design */
@@ -706,7 +754,8 @@ footer {
     background-color: rgba(0,0,0,0.6);
 }
 .modal-content {
-    background-color: #fefefe;
+    background-color: var(--card-bg);
+    color: var(--text-dark);
     margin: 10% auto;
     padding: 20px;
     border-radius: 8px;
@@ -725,4 +774,23 @@ footer {
 }
 .modal .close:hover, .modal .close:focus {
     color: #000;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 8px solid rgba(0,0,0,0.1);
+    border-top: 8px solid var(--primary-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Stretch content sections to push footer to bottom */
+section.section-content {
+    flex: 1;
 }
