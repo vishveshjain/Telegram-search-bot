@@ -311,10 +311,19 @@ function openDocument(docId) {
         .then(res => res.json())
         .then(doc => {
             const modal = document.getElementById('document-modal');
-            // Show loader while media loads
-            const modalBody = document.getElementById('modal-body');
-            modalBody.innerHTML = '<div class="buffer-container"><div class="buffer-bar"></div></div><div class="buffer-text">Loading: 0%</div>';
             modal.style.display = 'block';
+            const modalBody = document.getElementById('modal-body');
+            const hasMedia = doc.mime_type && (
+                doc.mime_type.startsWith('video/') ||
+                doc.mime_type.startsWith('image/') ||
+                doc.mime_type.startsWith('audio/') ||
+                doc.mime_type === 'application/pdf'
+            );
+            if (hasMedia) {
+                modalBody.innerHTML = '<div class="buffer-container"><div class="buffer-bar"></div></div><div class="buffer-text">Loading: 0%</div>';
+            } else {
+                modalBody.innerHTML = '';
+            }
             document.getElementById('modal-title').textContent = doc.file_name;
             document.getElementById('modal-date').textContent = new Date(doc.date).toLocaleString();
             // Render media if available
@@ -366,8 +375,8 @@ function openDocument(docId) {
                             content += `<a href="${part}" target="_blank" style="display:block; margin-bottom:1em;">${part}</a>`;
                             return;
                         }
-                        // Generic embed for other URLs
-                        content += `<iframe src="${part}" width="100%" height="400" style="margin-bottom:1em;"></iframe>`;
+                        // Generic embed for other URLs with fallback link
+                        content += `<object data="${part}" width="100%" height="400" style="margin-bottom:1em;"><a href="${part}" target="_blank">${part}</a></object>`;
                     } catch (e) {
                         content += `<a href="${part}" target="_blank">${part}</a>`;
                     }
@@ -376,27 +385,49 @@ function openDocument(docId) {
                 }
             });
             modalBody.insertAdjacentHTML('beforeend', content);
-            // Setup video buffering progress using media element
+            // Fallback hyperlink for iframes that refuse to load
+            modalBody.querySelectorAll('iframe').forEach(iframe => {
+                iframe.addEventListener('error', () => {
+                    const href = iframe.src;
+                    const link = document.createElement('a');
+                    link.href = href;
+                    link.textContent = href;
+                    link.target = '_blank';
+                    link.style.display = 'block';
+                    iframe.replaceWith(link);
+                });
+            });
+            // Skip buffering setup when not a media file
+            if (!hasMedia) return;
+            // Setup video buffering progress using XHR
             const bufferContainer = modalBody.querySelector('.buffer-container');
             const bufferBar = bufferContainer.querySelector('.buffer-bar');
             const bufferText = modalBody.querySelector('.buffer-text');
             const videoEl = modalBody.querySelector('video');
             if (videoEl) {
-                videoEl.addEventListener('progress', () => {
-                    if (videoEl.buffered.length && videoEl.duration) {
-                        const bufferedEnd = videoEl.buffered.end(videoEl.buffered.length - 1);
-                        const percent = Math.floor(bufferedEnd / videoEl.duration * 100);
+                // Use XHR to fetch media with progress events
+                const url = doc.media_url;
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.responseType = 'blob';
+                xhr.onprogress = event => {
+                    if (event.lengthComputable) {
+                        const percent = Math.floor(event.loaded / event.total * 100);
                         bufferBar.style.width = percent + '%';
                         bufferText.textContent = 'Loading: ' + percent + '%';
                     }
-                });
-                videoEl.addEventListener('canplaythrough', () => {
+                };
+                xhr.onload = () => {
                     bufferContainer.remove();
                     bufferText.remove();
-                });
-                // Trigger loading after listeners attached
-                videoEl.src = doc.media_url;
-                videoEl.load();
+                    videoEl.src = URL.createObjectURL(xhr.response);
+                };
+                xhr.onerror = () => {
+                    bufferContainer.remove();
+                    bufferText.remove();
+                    videoEl.src = url;
+                };
+                xhr.send();
             }
             // Fallback removal for images and audio
             const fallbackMedia = modalBody.querySelector('img, audio');
@@ -405,6 +436,13 @@ function openDocument(docId) {
                 fallbackMedia.addEventListener(eventName, () => {
                     bufferContainer.remove();
                     bufferText.remove();
+                });
+            }
+            // Remove loader for PDF iframe
+            const pdfIframe = modalBody.querySelector('iframe[type="application/pdf"]');
+            if (pdfIframe) {
+                pdfIframe.addEventListener('load', () => {
+                    bufferContainer.remove(); bufferText.remove();
                 });
             }
             // Initialize Twitter widgets if available
