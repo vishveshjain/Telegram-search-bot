@@ -30,10 +30,12 @@ A Telegram bot that collects and organizes documents from Telegram groups and ch
 
 ## File Structure
 
-- `bot/` - Python bot code
+- `bot.py` - Main bot code
 - `website/` - Front-end website files
-- `CONTRIBUTING.md` - Contribution guidelines
-- `LICENSE` - Project license (CC BY-NC 4.0)
+- `requirements.txt` - Python dependencies
+- `README.md` - Project documentation
+- `.env` - Environment variables file
+- `screenshots/` - Example screenshots
 
 ## Usage
 
@@ -47,11 +49,12 @@ A Telegram bot that collects and organizes documents from Telegram groups and ch
 
 ## Commands
 
-- `/start` - Start the bot
+- `/start` - Show main menu
 - `/help` - Show help information
 - `/connect` - Connect to a new group/channel
-- `/search` - Search for documents
-- `/recent` - Show recent documents 
+- `/search` - Search for documents (type keywords directly or use Search button)
+- `/recent` - Show recent documents
+- `/sources` - List connected sources
 
 ---
 
@@ -63,6 +66,6 @@ This project is licensed under the [Creative Commons Attribution-NonCommercial 4
 
 ## Screenshots
 
-| Home | /help command | /recent command |
+| Home | Search Results | Telegram Post Preview |
 |------|---------------|----------------------|
-| ![Home](screenshots/screenshot-2.jpg) | ![/help command](screenshots/screenshot-3.jpg) | ![/recent command](screenshots/screenshot-1.jpg) |
+| ![Home](screenshots/screenshot-1.jpg) | ![Search Results](screenshots/screenshot-2.jpg) | ![Telegram Post Preview](screenshots/screenshot-3.jpg) |

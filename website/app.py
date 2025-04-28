@@ -119,22 +119,33 @@ def api_media(doc_id):
     app.logger.debug(f"[api_media] message.media attribute: {getattr(message, 'media', None)}")
     if not getattr(message, 'media', None):
         return jsonify({'error': 'No media found'}), 404
-    # Download media to memory
-    buf = io.BytesIO()
-    app.logger.debug(f"[api_media] downloading media to buffer")
-    tele_client.download_media(message, file=buf)
-    app.logger.debug(f"[api_media] download_media complete, buffer size: {buf.getbuffer().nbytes}")
-    buf.seek(0)
-    # Stream to client with proper Content-Length header for progress events
-    mimetype = doc.get('mime_type') or 'application/octet-stream'
-    response = send_file(buf,
-                         mimetype=mimetype,
-                         as_attachment=False,
-                         download_name=doc.get('file_name'),
-                         conditional=True)
-    # Ensure Content-Length is set
-    response.headers['Content-Length'] = str(buf.getbuffer().nbytes)
-    return response
+    # Download media to disk for caching and Range support
+    downloads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'downloads'))
+    os.makedirs(downloads_dir, exist_ok=True)
+    extension = doc.get('file_type') or 'bin'
+    local_filename = f"{doc_id}.{extension}"
+    local_path = os.path.join(downloads_dir, local_filename)
+    if not os.path.isfile(local_path):
+        # Evict old cache files if total exceeds 100MB
+        max_cache_size = 100 * 1024 * 1024  # 100MB
+        total_size = sum(os.path.getsize(os.path.join(downloads_dir, f)) for f in os.listdir(downloads_dir))
+        if total_size > max_cache_size:
+            files = sorted(os.listdir(downloads_dir), key=lambda f: os.path.getmtime(os.path.join(downloads_dir, f)))
+            for fname in files:
+                fpath = os.path.join(downloads_dir, fname)
+                size_f = os.path.getsize(fpath)
+                os.remove(fpath)
+                total_size -= size_f
+                app.logger.debug(f"[api_media] evicted cache file: {fpath}")
+                if total_size <= max_cache_size:
+                    break
+        app.logger.debug(f"[api_media] downloading media to disk: {local_path}")
+        def progress_callback(downloaded, total):
+            percent = int(downloaded * 100 / total) if total else 0
+            app.logger.debug(f"[api_media] download progress: {downloaded}/{total} ({percent}%)")
+        tele_client.download_media(message, file=local_path, progress_callback=progress_callback)
+        app.logger.debug(f"[api_media] download_media complete, file at: {local_path}")
+    return send_file(local_path, mimetype=doc.get('mime_type') or 'application/octet-stream', conditional=True)
 
 @app.route('/api/search')
 def api_search():

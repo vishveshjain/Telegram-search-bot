@@ -1,0 +1,16 @@
+[project]
+name = "telegram-search-bot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "fasttelethonhelper>=1.0.7",
+    "fuzzywuzzy==0.18.0",
+    "pymongo==4.5.0",
+    "python-dotenv==1.0.0",
+    "python-levenshtein==0.22.0",
+    "python-telegram-bot==20.5",
+    "requests==2.31.0",
+    "telethon==1.31.1",
+]

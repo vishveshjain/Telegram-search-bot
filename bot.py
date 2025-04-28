@@ -22,6 +22,7 @@ from telegram.error import BadRequest
 from telethon import types
 import uuid
 from bson import ObjectId
+from FastTelethonhelper import fast_download
 
 # Load environment variables
 load_dotenv()
@@ -167,6 +168,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         [
             InlineKeyboardButton("Search Documents", callback_data="search"),
             InlineKeyboardButton("Recent Documents", callback_data="recent")
+        ],
+        [
+            InlineKeyboardButton("Sources", callback_data="sources"),
+            InlineKeyboardButton("Help", callback_data="help")
         ]
     ]
     
@@ -193,6 +198,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
+    # Handle callback context
+    if update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        message = query.message
+    else:
+        message = update.message
+    
     help_text = (
         "This bot helps you search for documents in Telegram channels and groups.\n\n"
         "To use this bot effectively:\n"
@@ -222,7 +235,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/help - यह सहायता संदेश दिखाएं"
     )
     
-    await update.message.reply_text(help_text)
+    await message.reply_text(help_text)
 
 async def auth_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start user authentication process with a simpler approach."""
@@ -261,7 +274,14 @@ async def auth_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def connect_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start process to connect to a new channel or group."""
-    await update.message.reply_text(
+    if update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        message = query.message
+    else:
+        message = update.message
+    
+    await message.reply_text(
         "Please send me the username or link of the Telegram channel or group you want to connect to.\n"
         "For example: @channel_name or https://t.me/channel_name\n\n"
         "Note: Due to Telegram API limitations, I can only process NEW files posted in the channel/group AFTER I've been added.\n"
@@ -275,7 +295,14 @@ async def connect_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Prompt the user to enter a search query."""
-    await update.message.reply_text(
+    if update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        message = query.message
+    else:
+        message = update.message
+    
+    await message.reply_text(
         "Please enter what you would like to search for.\n\n"
         "कृपया बताएं कि आप क्या खोजना चाहते हैं।"
     )
@@ -286,7 +313,14 @@ async def recent_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_id = update.effective_user.id
     
     if not mongo_available:
-        await update.message.reply_text(
+        if update.callback_query:
+            query = update.callback_query
+            await query.answer()
+            message = query.message
+        else:
+            message = update.message
+        
+        await message.reply_text(
             "Sorry, this functionality requires MongoDB which is not currently available.\n"
             "Please install and start MongoDB to enable full functionality.\n\n"
             "क्षमा करें, इस कार्यक्षमता के लिए MongoDB की आवश्यकता है जो वर्तमान में उपलब्ध नहीं है।\n"
@@ -294,8 +328,16 @@ async def recent_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
         return
     
+    # Handle callback or command context
+    if update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        message = query.message
+    else:
+        message = update.message
+    
     # Show loading message
-    progress_message = await update.message.reply_text(
+    progress_message = await message.reply_text(
         "Fetching recent documents... Please wait.\n\n"
         "हाल के दस्तावेज़ लाए जा रहे हैं... कृपया प्रतीक्षा करें।"
     )
@@ -370,33 +412,43 @@ async def search_in_sources(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     
     # Check if MongoDB is available
     if not mongo_available:
-        await update.message.reply_text(
+        if update.callback_query:
+            query = update.callback_query
+            await query.answer()
+            message = query.message
+        else:
+            message = update.message
+        
+        await message.reply_text(
             "MongoDB is not available. Please try again later.\n\n"
             "MongoDB उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।"
         )
         return
     
-    # Log the search query
-    query = context.args[0] if context.args else ""
-    for arg in context.args[1:]:
-        query += f" {arg}"
+    # Determine search query from message text or command args
+    if update.message and update.message.text:
+        text = update.message.text.strip()
+        if text.startswith("/search"):
+            parts = text.split(maxsplit=1)
+            query = parts[1].strip() if len(parts) > 1 else ""
+        else:
+            query = text
+    elif context.args:
+        query = " ".join(context.args)
+    else:
+        query = ""
     
     logger.info(f"User {user_id} searching for: {query}")
     
-    # If this was called from handle_message, use the message text as query
-    if not query and hasattr(update, "message") and update.message.text:
-        query = update.message.text
-    
-    # Check if query is empty
-    if not query:
-        await update.message.reply_text(
-            "Please provide a search query after the /search command. For example: /search document name\n\n"
-            "/search कमांड के बाद एक खोज क्वेरी प्रदान करें। उदाहरण के लिए: /search document name"
-        )
-        return
-    
     # Notify user that search is in progress
-    progress_message = await update.message.reply_text(
+    if update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        message = query.message
+    else:
+        message = update.message
+    
+    progress_message = await message.reply_text(
         f"Searching for: {query}... Please wait.\n\n"
         f"खोज रहा है: {query}... कृपया प्रतीक्षा करें।"
     )
@@ -726,7 +778,10 @@ async def download_file(update: Update, context: ContextTypes.DEFAULT_TYPE, doc_
             return
         
         # Download the file
-        file_path = await user_client.download_media(message, file="downloads/")
+        if document.get('mime_type', '').startswith('image/'):
+            file_path = await user_client.download_media(message, file='downloads/')
+        else:
+            file_path = await fast_download(user_client, message, download_folder='downloads/')
         
         if not file_path:
             await query.message.reply_text(
@@ -981,6 +1036,12 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                     "Your search results are no longer available. Please try searching again.\n\n"
                     "आपके खोज परिणाम अब उपलब्ध नहीं हैं। कृपया फिर से खोजने का प्रयास करें।"
                 )
+        
+        elif data == "sources":
+            await sources_command(update, context)
+            
+        elif data == "help":
+            await help_command(update, context)
         
         await query.answer()
         
@@ -1247,6 +1308,11 @@ async def fetch_and_index_messages(user_id, source_name, source_id, limit=300):
                     file_type = "photo"
                     mime_type = "image/jpeg"
                     file_name = f"photo_{message.id}.jpg"
+                    # Determine file size from photo sizes
+                    try:
+                        file_size = max(getattr(s, 'size', 0) for s in message.media.photo.sizes)
+                    except Exception:
+                        file_size = 0
                     
                 elif hasattr(message.media, 'video'):
                     # Video
@@ -1372,6 +1438,11 @@ async def process_new_message(event):
             file_type = "photo"
             mime_type = "image/jpeg"
             file_name = f"photo_{message.id}.jpg"
+            # Determine file size from photo sizes
+            try:
+                file_size = max(getattr(s, 'size', 0) for s in message.media.photo.sizes)
+            except Exception:
+                file_size = 0
             
         elif hasattr(message.media, 'video'):
             # Video
@@ -1499,25 +1570,47 @@ async def sources_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     # Check if MongoDB is available
     if not mongo_available:
-        await update.message.reply_text(
+        if update.callback_query:
+            query = update.callback_query
+            await query.answer()
+            message = query.message
+        else:
+            message = update.message
+        
+        await message.reply_text(
             "MongoDB is not available. Please try again later.\n\n"
             "MongoDB उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।"
         )
         return
     
     # Get all sources for this user
-    user_sources = list(sources_collection.find({"user_id": user_id}))
+    raw_sources = list(sources_collection.find({"user_id": user_id}))
+    
+    # Remove duplicate sources by name
+    unique_dict = {}
+    for src in raw_sources:
+        name = src.get("source_name")
+        if name not in unique_dict:
+            unique_dict[name] = src
+    user_sources = list(unique_dict.values())
     
     if not user_sources:
-        await update.message.reply_text(
+        if update.callback_query:
+            query = update.callback_query
+            await query.answer()
+            message = query.message
+        else:
+            message = update.message
+        
+        await message.reply_text(
             "You haven't connected to any channels or groups yet. Use /connect to add a source.\n\n"
             "आपने अभी तक किसी चैनल या ग्रुप से कनेक्ट नहीं किया है। स्रोत जोड़ने के लिए /connect का उपयोग करें।"
         )
         return
     
-    # Create a message listing all sources
-    message = "Your connected sources:\n\n"
-    message_hindi = "आपके जुड़े हुए स्रोत:\n\n"
+    # Create text listing all sources
+    sources_text = "Your connected sources:\n\n"
+    sources_text_hindi = "आपके जुड़े हुए स्रोत:\n\n"
     
     # Create keyboard with buttons for each source
     keyboard = []
@@ -1526,8 +1619,8 @@ async def sources_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         source_name = source.get("source_name", "Unknown")
         date_added = source.get("date_added", datetime.now()).strftime("%Y-%m-%d")
         
-        message += f"{i}. {source_name} (added on {date_added})\n"
-        message_hindi += f"{i}. {source_name} ({date_added} को जोड़ा गया)\n"
+        sources_text += f"{i}. {source_name} (added on {date_added})\n"
+        sources_text_hindi += f"{i}. {source_name} ({date_added} को जोड़ा गया)\n"
         
         # Add button to reindex this source
         keyboard.append([InlineKeyboardButton(
@@ -1535,13 +1628,21 @@ async def sources_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             callback_data=f"reindex_{source['_id']}"
         )])
     
-    message += "\nClick a button below to reindex messages from a source:"
-    message_hindi += "\nकिसी स्रोत से संदेशों को फिर से इंडेक्स करने के लिए नीचे एक बटन पर क्लिक करें:"
+    sources_text += "\nClick a button below to reindex messages from a source:"
+    sources_text_hindi += "\nकिसी स्रोत से संदेशों को फिर से इंडेक्स करने के लिए नीचे एक बटन पर क्लिक करें:"
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.message.reply_text(
-        message + "\n\n" + message_hindi,
+    # Send list via callback or message context
+    if update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        msg_obj = query.message
+    else:
+        msg_obj = update.message
+    
+    await msg_obj.reply_text(
+        sources_text + "\n\n" + sources_text_hindi,
         reply_markup=reply_markup
     )
 
