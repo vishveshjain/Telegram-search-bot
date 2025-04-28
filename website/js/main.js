@@ -326,6 +326,8 @@ function openDocument(docId) {
                     content += `<img src="${doc.media_url}" style="width:100%; margin-bottom:1em;" onload="this.previousSibling.remove()" />`;
                 } else if (doc.mime_type.startsWith('audio/')) {
                     content += `<audio controls src="${doc.media_url}" style="width:100%; margin-bottom:1em;" onloadedmetadata="this.previousSibling.remove()"></audio>`;
+                } else if (doc.mime_type === 'application/pdf') {
+                    content += `<iframe src="${doc.media_url}#view=fitH" type="application/pdf" width="100%" height="600px" style="margin-bottom:1em; border:none;"></iframe>`;
                 }
             } else {
                 content += `<p>No media available.</p>`;

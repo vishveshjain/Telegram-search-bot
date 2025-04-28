@@ -10,6 +10,8 @@ import asyncio
 import requests
 import logging
 import mimetypes
+from FastTelethonhelper import fast_download
+from tqdm import tqdm
 
 # Load environment variables from project root
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
@@ -120,7 +122,8 @@ def api_media(doc_id):
     if not getattr(message, 'media', None):
         return jsonify({'error': 'No media found'}), 404
     # Download media to disk for caching and Range support
-    downloads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'downloads'))
+    # Ensure trailing separator for correct fast_download path concatenation
+    downloads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'downloads')) + os.sep
     os.makedirs(downloads_dir, exist_ok=True)
     extension = doc.get('file_type') or 'bin'
     local_filename = f"{doc_id}.{extension}"
@@ -140,11 +143,37 @@ def api_media(doc_id):
                 if total_size <= max_cache_size:
                     break
         app.logger.debug(f"[api_media] downloading media to disk: {local_path}")
+        # Use tqdm to display download progress
+        pbar = None
         def progress_callback(downloaded, total):
-            percent = int(downloaded * 100 / total) if total else 0
-            app.logger.debug(f"[api_media] download progress: {downloaded}/{total} ({percent}%)")
-        tele_client.download_media(message, file=local_path, progress_callback=progress_callback)
-        app.logger.debug(f"[api_media] download_media complete, file at: {local_path}")
+            nonlocal pbar
+            if pbar is None:
+                pbar = tqdm(total=total, unit='B', unit_scale=True, desc='Downloading media')
+            # Update bar by delta bytes
+            pbar.update(downloaded - pbar.n)
+            return None
+        if doc.get('mime_type', '').startswith('image/'):
+            tele_client.download_media(message, file=local_path, progress_callback=progress_callback)
+            app.logger.debug(f"[api_media] tele_client.download_media complete, file at: {local_path}")
+        else:
+            downloaded_path = loop.run_until_complete(
+                fast_download(
+                    tele_client,
+                    message,
+                    reply = "Starting download...",
+                    download_folder=downloads_dir,
+                    progress_bar_function = progress_callback
+                )
+            )
+            # Move downloaded file to cache path named by doc_id
+            try:
+                os.replace(downloaded_path, local_path)
+                app.logger.debug(f"[api_media] moved downloaded file to cache: {local_path}")
+            except Exception as e:
+                app.logger.error(f"[api_media] could not rename downloaded file: {e}")
+                # Fallback to original downloaded path
+                local_path = downloaded_path
+            app.logger.debug(f"[api_media] fast_download complete, file at: {local_path}")
     return send_file(local_path, mimetype=doc.get('mime_type') or 'application/octet-stream', conditional=True)
 
 @app.route('/api/search')

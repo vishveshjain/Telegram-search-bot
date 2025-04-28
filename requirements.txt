@@ -5,4 +5,5 @@ pymongo==4.5.0
 fuzzywuzzy==0.18.0
 python-Levenshtein==0.22.0
 requests==2.31.0
-flask
+Flask[async]
+tqdm==4.67.1
