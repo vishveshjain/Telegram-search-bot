@@ -7,3 +7,4 @@ python-Levenshtein==0.22.0
 requests==2.31.0
 Flask[async]
 tqdm==4.67.1
+FastTelethonhelper >=1.0.7
