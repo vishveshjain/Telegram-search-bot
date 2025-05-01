@@ -876,10 +876,18 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 logger.error(f"Error in download_file: {e}")
                 await query.answer(f"Error downloading file: {str(e)}")
         
+        elif data == "reindex_all":
+            await reindex_all(update, context)
+        
         elif data.startswith('reindex_'):
-            # Reindex messages from an existing source
-            source_id = data.split('_', 1)[1]  # Split only on first _ to handle IDs with underscores
-            await reindex_source(update, context, source_id)
+            # Reindex messages from an existing source only if valid ObjectId
+            m = re.match(r'^reindex_([0-9a-fA-F]{24})$', data)
+            if m:
+                source_id = m.group(1)
+                await reindex_source(update, context, source_id)
+            else:
+                await query.answer("Invalid source ID")
+                return
             
         elif data == "cancel_reindex":
             await query.edit_message_text(
@@ -1628,6 +1636,11 @@ async def sources_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             callback_data=f"reindex_{source['_id']}"
         )])
     
+    keyboard.append([InlineKeyboardButton(
+        "Reindex All",
+        callback_data="reindex_all"
+    )])
+    
     sources_text += "\nClick a button below to reindex messages from a source:"
     sources_text_hindi += "\nकिसी स्रोत से संदेशों को फिर से इंडेक्स करने के लिए नीचे एक बटन पर क्लिक करें:"
     
@@ -1644,6 +1657,53 @@ async def sources_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await msg_obj.reply_text(
         sources_text + "\n\n" + sources_text_hindi,
         reply_markup=reply_markup
+    )
+
+async def reindex_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Reindex messages from all sources."""
+    query = update.callback_query
+    user_id = query.from_user.id
+
+    # Check if MongoDB is available
+    if not mongo_available:
+        await query.answer("MongoDB is not available")
+        await query.edit_message_text(
+            "MongoDB is not available. Please try again later.\n\n"
+            "MongoDB उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।"
+        )
+        return
+
+    # Acknowledge the callback and show starting message
+    await query.answer()
+    status_message = await query.edit_message_text(
+        "Starting to reindex all sources... This may take a while.\n\n"
+        "सभी स्रोतों को फिर से इंडेक्स करना शुरू हो रहा है... इसमें कुछ समय लग सकता है।"
+    )
+
+    # Retrieve all sources for the user
+    raw_sources = list(sources_collection.find({"user_id": user_id}))
+    if not raw_sources:
+        await status_message.edit_text(
+            "You have no sources to reindex.\n\n"
+            "आपके पास कोई स्रोत नहीं है जिन्हें इंडेक्स किया जा सके।"
+        )
+        return
+
+    total_indexed = 0
+    for src in raw_sources:
+        source_id_obj = src["_id"]
+        source_name = src.get("source_name", "Unknown source")
+        try:
+            count = await fetch_and_index_messages(user_id, source_name, source_id_obj, limit=500)
+            total_indexed += count
+        except Exception as e:
+            logger.error(f"Error reindexing {source_name}: {e}")
+
+    await status_message.edit_text(
+        f"Reindexed {len(raw_sources)} sources.\n"
+        f"Total messages indexed: {total_indexed}.\n\n"
+        f"{len(raw_sources)} स्रोतों को फिर से इंडेक्स किया गया।\n"
+        f"कुल {total_indexed} संदेशों को इंडेक्स किया गया।"
     )
 
 def main() -> None:
